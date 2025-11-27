@@ -142,7 +142,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Use project root (/app) for STATIC_ROOT so WhiteNoise looks at /app/staticfiles,
+# avoiding startup warnings expecting that path. Previously it was /app/backend/staticfiles.
+STATIC_ROOT = BASE_DIR.parent / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 REST_FRAMEWORK = {
@@ -182,15 +184,50 @@ CORS_ALLOW_METHODS = [
 CORS_EXPOSE_HEADERS = ['Authorization', 'Content-Type']
 
 # Email settings for password reset
+# Robust casting helpers to avoid type issues (e.g. timeout/port as str causing smtplib TypeError)
+def env_bool(name: str, default=False):
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return val.lower() in ('1', 'true', 'yes', 'on')
+
+def env_int(name: str, default: int):
+    val = os.getenv(name)
+    if val is None or val.strip() == '':
+        return default
+    try:
+        return int(val)
+    except ValueError:
+        return default
+
+def env_float(name: str, default: float):
+    val = os.getenv(name)
+    if val is None or val.strip() == '':
+        return default
+    try:
+        return float(val)
+    except ValueError:
+        return default
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = os.getenv('EMAIL_PORT', 465)
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', True)
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', False)
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+EMAIL_PORT = env_int('EMAIL_PORT', 465)  # must be int
+EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', False)
+EMAIL_USE_SSL = env_bool('EMAIL_USE_SSL', True)  # allow SSL by default if using port 465
+if EMAIL_USE_TLS and EMAIL_USE_SSL:
+    # If both are accidentally set true, prefer TLS (587) unless port explicitly 465
+    if EMAIL_PORT == 465:
+        EMAIL_USE_TLS = False
+    else:
+        EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-EMAIL_TIMEOUT = os.getenv('EMAIL_TIMEOUT', 20)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'no-reply@localhost'
+EMAIL_TIMEOUT = env_float('EMAIL_TIMEOUT', 20.0)  # smtplib accepts float
+
+# In local development, optionally switch to console backend if no credentials provided
+if DEBUG and (not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD):
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS')
 if CSRF_TRUSTED_ORIGINS:

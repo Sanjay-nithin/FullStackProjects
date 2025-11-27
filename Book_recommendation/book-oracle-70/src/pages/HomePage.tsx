@@ -193,7 +193,7 @@ const HomePage = () => {
             {[
               {
                 title: "Personalized Recommendations",
-                description: "Our AI learns your preferences to suggest books you'll love",
+                description: "Our recommendation engine learns your preferences to suggest books you'll love",
                 icon: Star,
                 gradient: "from-primary to-primary-glow"
               },

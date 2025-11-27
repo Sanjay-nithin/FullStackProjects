@@ -23,6 +23,8 @@ RUN pip install --upgrade pip && pip install -r requirements.txt && pip install 
 COPY . .
 RUN chmod +x /app/entrypoint.sh
 
+# Ensure static root exists early to avoid WhiteNoise startup warning
+RUN mkdir -p /app/staticfiles
 # Collect static (harmless if none)
 RUN python manage.py collectstatic --noinput || true
 
