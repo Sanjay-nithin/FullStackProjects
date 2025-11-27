@@ -1,0 +1,40 @@
+from django.urls import path
+from .views import *
+from .pandas_utils import upload_books_csv_pandas
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+urlpatterns = [
+    path("auth/register/", register_view, name="register"),
+    path("auth/login/", login_view, name="login"),
+    path("auth/forgot-password/", forgot_password, name="forgot-password"),
+    path("auth/verify-otp/", verify_otp, name="verify-otp"),
+    path("auth/reset-password/", reset_password, name="reset-password"),
+    path("genres/", get_genres, name="get-genres"),
+    path("users/preferences/", update_user_preferences, name="update-preferences"),
+    path("users/preferences/favorite-genres/", get_favorite_genres, name="get-favorite-genres"),
+    path("users/preferences/favorite-genres/add/", add_favorite_genre, name="add-favorite-genre"),
+    path("users/preferences/favorite-genres/remove/", remove_favorite_genre, name="remove-favorite-genre"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("books/recommended/", recommended_books, name="recommended-books"),
+    path('users/me/', current_user_view, name='current-user'),
+    path('users/saved-books/', get_saved_books, name='get-saved-books'),
+    path("books/<int:book_id>/toggle-save/", toggle_save_book, name="toggle-save-book"),
+    path('books/search/', search_books, name='search-books'),
+    path('books/explore/', explore_books, name='explore-books'),
+    path('books/<int:book_id>/', book_detail, name='book-detail'),
+    path('books/<int:book_id>/edit/', edit_book, name='edit-book'),
+    path('books/<int:book_id>/delete/', delete_book, name='delete-book'),
+    path('books/add/', add_book, name='add-book'),
+    path('dashboard/', dashboard_stats, name='dashboard-stats'),
+    path('admin/users/', get_all_users, name='get-all-users'),
+    path('admin/users/<int:user_id>/delete/', delete_user, name='delete-user'),
+    path('admin/books/', get_all_books, name='get-all-books'),
+    path('admin/genres/add/', add_genre, name='add-genre'),
+    # Admin genre management
+    path('admin/genres/', list_genres_admin, name='admin-list-genres'),
+    path('admin/genres/<int:genre_id>/delete/', delete_genre_admin, name='admin-delete-genre'),
+    path('admin/genres/<int:genre_id>/edit/', edit_genre_admin, name='admin-edit-genre'),
+    path('admin/genres/import-csv/', import_genres_csv_admin, name='admin-import-genres-csv'),
+    path('admin/books/import-csv/', upload_books_csv_pandas, name='upload-books-csv'),
+    path('books/filter-options/', get_filter_options, name='filter-options'),
+]
