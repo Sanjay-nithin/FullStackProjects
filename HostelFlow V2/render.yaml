@@ -1,0 +1,37 @@
+services:
+  # Django Backend Web Service
+  - type: web
+    name: hostelflow-backend
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: False
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hostelflow-db
+          property: connectionString
+      - key: PORT
+        value: 8000
+    healthCheckPath: /api/auth/profile
+    autoDeploy: true
+
+  # PostgreSQL Database
+  - type: pserv
+    name: hostelflow-db
+    env: docker
+    region: oregon
+    plan: free
+    ipAllowList: []
+
+databases:
+  - name: hostelflow-db
+    databaseName: hostelflow
+    user: hostelflow_user
